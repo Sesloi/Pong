@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -11,8 +11,8 @@ namespace Pong
 
         Texture2D ballTexture;
         Vector2 ballPosition;
+        Vector2 ballSpeedVector;
         float ballSpeed;
-        //TODO: Добавете нова булева променлива down, която показва дали топката се движи нагоре/надолу
 
         public Game()
         {
@@ -25,9 +25,12 @@ namespace Pong
         {
             ballPosition = new Vector2(_graphics.PreferredBackBufferWidth / 2,
                                        _graphics.PreferredBackBufferHeight / 2);
-            ballSpeed = 100f;
+            ballSpeed = 200f;
 
-            //TODO: инициализирайте булевата променлива
+            // Начална посока: диагонално нагоре и надясно
+            ballSpeedVector = new Vector2(1, -1);
+            ballSpeedVector.Normalize();
+            ballSpeedVector *= ballSpeed;
 
             base.Initialize();
         }
@@ -40,16 +43,38 @@ namespace Pong
 
         protected override void Update(GameTime gameTime)
         {
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+                Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            float updatedBallSpeed = ballSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            //TODO: Изменете ballPosition.Y координатата в зависимост от стойността на булевата променлива down
+            // Преместваме топката
+            ballPosition += ballSpeedVector * deltaTime;
 
-            //TODO: Ако картинката е напуска границите на екрана, това означава, че топката се е "ударила" в края на екрана и трябва да
-            //промени посоката си на движение. За целта трябва да промените променливата down.
+            // Проверка за сблъсък с лявата и дясната страна
+            if (ballPosition.X <= ballTexture.Width / 2)
+            {
+                ballPosition.X = ballTexture.Width / 2;
+                ballSpeedVector.X = -ballSpeedVector.X;
+            }
+            else if (ballPosition.X >= _graphics.PreferredBackBufferWidth - ballTexture.Width / 2)
+            {
+                ballPosition.X = _graphics.PreferredBackBufferWidth - ballTexture.Width / 2;
+                ballSpeedVector.X = -ballSpeedVector.X;
+            }
 
+            // Проверка за сблъсък с горната и долната страна
+            if (ballPosition.Y <= ballTexture.Height / 2)
+            {
+                ballPosition.Y = ballTexture.Height / 2;
+                ballSpeedVector.Y = -ballSpeedVector.Y;
+            }
+            else if (ballPosition.Y >= _graphics.PreferredBackBufferHeight - ballTexture.Height / 2)
+            {
+                ballPosition.Y = _graphics.PreferredBackBufferHeight - ballTexture.Height / 2;
+                ballSpeedVector.Y = -ballSpeedVector.Y;
+            }
 
             base.Update(gameTime);
         }
